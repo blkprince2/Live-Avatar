@@ -1,0 +1,8 @@
+{
+  "name": "SHARJAYS Avatar Studio AI",
+  "description": "Transform still images into lifelike speaking videos using Gemini Veo technology. Select from public avatars or upload your own to generate realistic facial movements and digital presenters.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
