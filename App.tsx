@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Avatar, GenerationStatus, VideoResult, LipSyncConfig, ExportConfig, LanguageSettings, WatermarkConfig, PolishConfig, ScriptSegment, AudioDesignConfig, VoiceDNA } from './types';
 import { PUBLIC_AVATARS, SUPPORTED_LANGUAGES, BACKGROUND_MUSIC_TRACKS, SOUND_EFFECTS, VOICE_LIBRARY, CLONE_EXAMPLES } from './constants';
@@ -570,7 +571,7 @@ const App: React.FC = () => {
         id: segments[i].id,
         prompt: segments[i].text,
         avatarId: 'custom',
-        resolution: '720p',
+        resolution: exportConfig.resolution,
         scriptSnippet: segments[i].text.substring(0, 30)
       });
 
@@ -608,7 +609,6 @@ const App: React.FC = () => {
       canvas.width = width;
       canvas.height = height;
       
-      // CRITICAL FIX: Ensure AudioContext is active and not blocked
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 44100 });
       if (audioCtx.state === 'suspended') await audioCtx.resume();
       
@@ -617,7 +617,6 @@ const App: React.FC = () => {
       voiceGain.gain.value = audioDesign.voiceVolume / 100;
       voiceGain.connect(mixDest);
       
-      // Background Music Mix
       let bgmElement: HTMLAudioElement | null = null;
       if (audioDesign.bgmUrl && exportConfig.includeBackgroundAudio && exportConfig.format !== 'gif') {
         bgmElement = new Audio(audioDesign.bgmUrl);
@@ -628,7 +627,6 @@ const App: React.FC = () => {
         bgmSource.connect(mixDest);
       }
       
-      // SFX Mix
       const sfxGain = audioCtx.createGain();
       sfxGain.gain.value = audioDesign.sfxVolume / 100;
       sfxGain.connect(mixDest);
@@ -640,10 +638,7 @@ const App: React.FC = () => {
       const chunks: Blob[] = [];
 
       if (!isGif) {
-        // Capture stream at 30fps
         const canvasStream = canvas.captureStream(30);
-        
-        // Ensure audio tracks are present in the combined stream
         const combinedStream = new MediaStream([
           ...canvasStream.getVideoTracks(),
           ...mixDest.stream.getAudioTracks()
@@ -657,8 +652,6 @@ const App: React.FC = () => {
         ];
         
         const selectedMime = preferredMimes.find(m => MediaRecorder.isTypeSupported(m)) || '';
-        
-        // Use a high bitrate for the final master
         recorder = new MediaRecorder(combinedStream, { 
             mimeType: selectedMime, 
             videoBitsPerSecond: 12000000,
@@ -707,9 +700,6 @@ const App: React.FC = () => {
         v.src = seg.videoUrl!;
         v.crossOrigin = "anonymous";
         v.preload = 'auto';
-        
-        // IMPORTANT: video must NOT be muted if we want to capture its audio via AudioContext reliably in some environments
-        // We handle the silent playback by just not connecting the AudioContext destination
         v.muted = false; 
         v.volume = 1.0; 
 
@@ -718,7 +708,6 @@ const App: React.FC = () => {
           
           v.onloadedmetadata = () => {
             if (!isGif) {
-              // Extract audio track from segment and route to master mix
               sourceNode = audioCtx.createMediaElementSource(v);
               sourceNode.connect(voiceGain);
             }
@@ -737,7 +726,6 @@ const App: React.FC = () => {
             
             ctx.drawImage(v, 0, 0, width, height);
             
-            // Apply Watermark
             if (watermark.enabled && watermark.text) {
               ctx.save();
               const padding = 40;
@@ -792,7 +780,6 @@ const App: React.FC = () => {
           audioCtx.close();
         });
       } else {
-        // Wait for final buffers to flush
         setTimeout(() => {
           if (recorder && recorder.state !== 'inactive') {
             recorder.stop();
@@ -1121,7 +1108,7 @@ const App: React.FC = () => {
                           id: s.id,
                           prompt: s.text,
                           avatarId: 'custom',
-                          resolution: '720p',
+                          resolution: exportConfig.resolution,
                           scriptSnippet: s.text.substring(0, 30)
                         });
                       }
@@ -1226,7 +1213,7 @@ const App: React.FC = () => {
                           id: s.id, 
                           prompt: s.text, 
                           avatarId: 'custom', 
-                          resolution: '720p', 
+                          resolution: exportConfig.resolution, 
                           scriptSnippet: s.text.substring(0, 50) 
                         });
                         setActiveSegmentIndex(i);
@@ -1276,18 +1263,34 @@ const App: React.FC = () => {
           <section className="glass-panel p-6 rounded-3xl shadow-2xl border-white/5 hover:border-white/10 transition-all duration-500">
             <h2 className="text-sm font-black uppercase tracking-widest text-emerald-400 mb-6 flex items-center gap-2"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.6)]" /> Master Export Core</h2>
             <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Export Format</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['mp4', 'webm', 'gif'] as const).map((fmt) => (
-                    <button
-                      key={fmt}
-                      onClick={() => setExportConfig(prev => ({ ...prev, format: fmt }))}
-                      className={`py-2 rounded-xl text-[9px] font-black uppercase border transition-all duration-300 ${exportConfig.format === fmt ? 'bg-emerald-500/20 border-emerald-500 text-emerald-200' : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600'}`}
-                    >
-                      {fmt}
-                    </button>
-                  ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Export Format</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['mp4', 'webm', 'gif'] as const).map((fmt) => (
+                      <button
+                        key={fmt}
+                        onClick={() => setExportConfig(prev => ({ ...prev, format: fmt }))}
+                        className={`py-2 rounded-xl text-[9px] font-black uppercase border transition-all duration-300 ${exportConfig.format === fmt ? 'bg-emerald-500/20 border-emerald-500 text-emerald-200' : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600'}`}
+                      >
+                        {fmt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Render Resolution</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['720p', '1080p'] as const).map((res) => (
+                      <button
+                        key={res}
+                        onClick={() => setExportConfig(prev => ({ ...prev, resolution: res }))}
+                        className={`py-2 rounded-xl text-[9px] font-black uppercase border transition-all duration-300 ${exportConfig.resolution === res ? 'bg-emerald-500/20 border-emerald-500 text-emerald-200' : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600'}`}
+                      >
+                        {res}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="space-y-4">

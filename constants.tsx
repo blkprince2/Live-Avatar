@@ -1,3 +1,4 @@
+
 import { Avatar, VoiceDNA, Voice } from './types';
 
 export const PUBLIC_AVATARS: Avatar[] = [
@@ -15,7 +16,7 @@ export const PUBLIC_AVATARS: Avatar[] = [
   },
   {
     id: 'avatar-3',
-    name: 'Casual Content Creator',
+    name: 'Casual Creator',
     url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1000&auto=format&fit=crop',
     description: 'Relatable and friendly'
   },
@@ -24,6 +25,18 @@ export const PUBLIC_AVATARS: Avatar[] = [
     name: 'Executive Speaker',
     url: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1000&auto=format&fit=crop',
     description: 'Authoritative and clean'
+  },
+  {
+    id: 'avatar-5',
+    name: 'Creative Director',
+    url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop',
+    description: 'Confident and articulate'
+  },
+  {
+    id: 'avatar-6',
+    name: 'Senior Researcher',
+    url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=1000&auto=format&fit=crop',
+    description: 'Thoughtful and knowledgeable'
   }
 ];
 
@@ -85,7 +98,7 @@ export const VOICE_LIBRARY: Voice[] = [
       speed: 'Fast-paced',
       tone: 'Dynamic and High-Clarity',
       emotionalBase: 'Enthusiastic',
-      fingerprint: 'A bright, energetic female voice with high soprano pitch, front-focused resonance, and a quick, engaging pace for modern content creation.'
+      fingerprint: 'A bright, energetic female voice with high soprano pitch, font-focused resonance, and a quick, engaging pace for modern content creation.'
     }
   }
 ];

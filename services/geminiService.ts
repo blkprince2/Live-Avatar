@@ -122,7 +122,6 @@ export class GeminiService {
     }
   }
 
-  // Added condenseScript method to fix missing property error in App.tsx
   static async condenseScript(text: string, targetWords: number): Promise<string> {
     const ai = await this.getAI();
     const response = await ai.models.generateContent({
@@ -197,7 +196,6 @@ export class GeminiService {
     }
   }
 
-  // Added analyzeLipSyncAccuracy method to fix missing property error in App.tsx
   static async analyzeLipSyncAccuracy(audioB64: string, mimeType: string, script: string): Promise<SyncAnalysis> {
     const ai = await this.getAI();
     const base64Data = audioB64.split(',')[1] || audioB64;
@@ -267,24 +265,26 @@ export class GeminiService {
 
     let visualPolishPrompt = "";
     if (polish) {
-      if (polish.highFidelity) visualPolishPrompt += "Hyper-realistic, cinematic lighting, 8k textures. ";
-      const gradePrompts: Record<string, string> = { cinematic: "Cinematic grade. ", warm: "Warm grade. ", cool: "Cool grade. ", vibrant: "Vibrant grade. ", sepia: "Sepia grade. " };
+      if (polish.highFidelity) visualPolishPrompt += "Photorealistic, highly detailed 8k textures, cinematic lighting. ";
+      const gradePrompts: Record<string, string> = { cinematic: "Cinematic grade. ", warm: "Warm color grading. ", cool: "Cool color grading. ", vibrant: "Vibrant and rich colors. ", sepia: "Classic sepia tone. " };
       if (polish.colorGrade !== 'none') visualPolishPrompt += gradePrompts[polish.colorGrade] || "";
-      if (polish.grainIntensity > 0) visualPolishPrompt += "Film grain texture. ";
-      if (polish.vignette > 0) visualPolishPrompt += "Edge vignette. ";
-      if (polish.softFocus > 0) visualPolishPrompt += "Soft focus bokeh. ";
+      if (polish.grainIntensity > 0) visualPolishPrompt += "Subtle film grain. ";
+      if (polish.vignette > 0) visualPolishPrompt += "Edge vignetting. ";
+      if (polish.softFocus > 0) visualPolishPrompt += "Soft focus background. ";
       if (polish.stabilization) {
         const level = polish.stabilizationStrength > 70 ? "Aggressive" : polish.stabilizationStrength < 30 ? "Light" : "Professional";
-        visualPolishPrompt += `${level} camera stabilization enabled. Eliminate micro-jitters and ensure gimbal-smooth camera movement. `;
+        visualPolishPrompt += `${level} camera stabilization. Ensure zero micro-jitters. `;
       }
     }
 
-    const prompt = `${visualPolishPrompt}A professional studio video of this person speaking directly to camera. 
+    const prompt = `${visualPolishPrompt}A photorealistic, professional studio video of this real person speaking naturally directly to the camera. 
+      The person's skin should have realistic texture, fine pores, and natural human qualities.
       ${voiceContext} 
       ${langContext}
+      The performance must feature fluid facial movements, subtle micro-expressions, and consistent natural eye contact.
       SCRIPT: "${displayScript}". 
       FACIAL DYNAMICS: ${lipIntensityStr} lip-sync, ${expressionStr}, and ${lipBlinkStr}. 
-      The audio and visual performance must be perfectly synchronized to create a lifelike digital human presence.`;
+      The audio and visual performance must be flawlessly synchronized to create a convincing, lifelike digital human presence.`;
 
     return await ai.models.generateVideos({
       model: polish?.highFidelity ? APP_CONFIG.MODELS.VIDEO_HQ : APP_CONFIG.MODELS.VIDEO,
